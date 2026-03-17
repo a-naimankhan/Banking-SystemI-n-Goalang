@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// THE main things about Account
 type Account struct {
 	Mu      sync.Mutex
 	ID      string

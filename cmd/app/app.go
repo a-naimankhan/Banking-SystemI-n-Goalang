@@ -1,4 +1,4 @@
-package cmd
+package app
 
 import (
 	"BankingSystem/internal/domain"
@@ -8,6 +8,8 @@ import (
 )
 
 func RunApp() {
+	//Starting Running Bank Application
+
 	// 1. Инициализируем хранилище
 	repo := repository.NewInMemRepo()
 

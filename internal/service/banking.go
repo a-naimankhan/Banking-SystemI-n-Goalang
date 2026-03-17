@@ -2,6 +2,7 @@ package service
 
 import (
 	"BankingSystem/internal/domain"
+	"errors"
 )
 
 type BankingService struct {
@@ -13,6 +14,15 @@ func NewBankingService(r domain.AccountRepository) *BankingService {
 }
 
 func (s *BankingService) Transfer(fromID, toID string, amount float32) error {
+
+	//Validation to check if the user are trying to transfer to itself
+	if fromID == toID {
+		return errors.New("Can't Transfer to urself!")
+	}
+
+	//Getting Account Block
+	//For now Getting from map
+	//In future from DB but it will not change the logic here!
 	fromAcc, err := s.repo.GetByID(fromID)
 	if err != nil {
 		return err
@@ -23,6 +33,8 @@ func (s *BankingService) Transfer(fromID, toID string, amount float32) error {
 		return err
 	}
 
+	//Transaction level
+	//
 	if fromAcc.ID < toAcc.ID {
 		fromAcc.Mu.Lock()
 		toAcc.Mu.Lock()
@@ -43,6 +55,8 @@ func (s *BankingService) Transfer(fromID, toID string, amount float32) error {
 		return err
 	}
 
+	//Saving Memories
+	//Maybe should write them as another method to make code cleaner
 	if err := s.repo.Update(fromAcc); err != nil {
 		return err
 	}
