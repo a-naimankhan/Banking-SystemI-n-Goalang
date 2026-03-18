@@ -14,7 +14,9 @@ func main() {
 	case "1":
 		app.RunApp()
 	case "2":
-		app.RunTestMode()
+		app.RunTestMode_1()
+	case "3":
+		app.RunTestMode_2()
 	default:
 		fmt.Println("Unknow Command")
 	}

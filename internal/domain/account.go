@@ -15,8 +15,8 @@ type Account struct {
 
 type AccountRepository interface {
 	GetByID(id string) (*Account, error)
-	Update(account *Account) error
-	Create(account *Account) error
+	Update(anyAccount interface{}) error
+	Create(anyAccount interface{}) error
 }
 
 func (a *Account) Deposit(amount float32) error {

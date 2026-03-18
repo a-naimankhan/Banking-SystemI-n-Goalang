@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func RunTestMode() {
+func RunTestMode_1() {
 	fmt.Println("----Run TestMode---")
 
 	//Initializing Block
@@ -77,4 +77,27 @@ func RunTestMode() {
 		fmt.Println("Failed : Money Leaked ")
 	}
 
+}
+
+func RunTestMode_2() {
+
+	repo := repository.NewInMemRepo()
+
+	// Создаем обычный счет
+	repo.Create(&domain.Account{ID: "1", Owner: "Aibar", Balance: 1000})
+
+	// Создаем накопительный счет (10% годовых / ставка 0.1)
+	savings := &domain.SavingAccount{
+		Account:      &domain.Account{ID: "2", Owner: "Investor", Balance: 5000},
+		InterestRate: 0.1,
+	}
+	repo.Create(savings)
+
+	// Запускаем фоновый воркер
+	// Он будет работать в отдельной горутине
+	service.StartInterestWorker(repo, 10*time.Second)
+
+	// Дальше твоя обычная логика меню или переводов...
+	fmt.Println("Bank is running. Wait 10s to see interest accrual.")
+	select {} // Чтобы main не закрылся сразу
 }
