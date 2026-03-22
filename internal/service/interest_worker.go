@@ -6,21 +6,62 @@ import (
 	"time"
 )
 
-type SavingsReposity interface {
+type SavingsRepository interface {
 	GetAllSavings() []*domain.SavingAccount
 }
 
-func StartInterestWorker(repo SavingsReposity, interval time.Duration) {
-	ticker := time.NewTicker(interval)
+type InterestWorker struct {
+	repo     SavingsRepository
+	interval time.Duration
+	stopChan chan struct{}
+}
+
+func NewInterestWorker(r SavingsRepository, interval time.Duration) *InterestWorker {
+	return &InterestWorker{
+		repo:     r,
+		interval: interval,
+		stopChan: make(chan struct{}),
+	}
+}
+
+func (w *InterestWorker) Start() {
+	ticker := time.NewTicker(w.interval)
 
 	go func() {
-		for range ticker.C {
-			fmt.Println("[Worker] Checking savings accounts for interest...")
-			accounts := repo.GetAllSavings()
-			for _, acc := range accounts {
-				amount := acc.AccrueInterest()
-				fmt.Printf("[Worker] Accured %.2f to Account %s (Owner : %s)\n", amount, acc.ID, acc.Owner)
+		fmt.Printf("[InterestWorker] Started with interlval %s\n", w.interval)
+		for {
+			select {
+			case <-ticker.C:
+				w.process()
+			case <-w.stopChan:
+				ticker.Stop()
+				fmt.Println("[Interest worker] Stopped")
+				return
 			}
 		}
 	}()
+}
+
+func (w *InterestWorker) process() {
+	accounts := w.repo.GetAllSavings()
+	if len(accounts) == 0 {
+		return
+	}
+
+	fmt.Printf("[InterestWorker] Checking %d savings accounts...\n", len(accounts))
+	for _, acc := range accounts {
+		// Блокируем аккаунт перед начислением, чтобы никто не переводил деньги в этот момент
+		acc.Mu.Lock()
+		interest := acc.AccrueInterest()
+		acc.Mu.Unlock()
+
+		if interest > 0 {
+			fmt.Printf("[InterestWorker] Accrued %.2f to Account %s (Owner: %s)\n",
+				interest, acc.ID, acc.Owner)
+		}
+	}
+}
+
+func (w *InterestWorker) Stop() {
+	close(w.stopChan)
 }

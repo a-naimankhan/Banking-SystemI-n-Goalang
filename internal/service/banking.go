@@ -56,7 +56,6 @@ func (s *BankingService) Transfer(fromID, toID string, amount float32) error {
 	}
 
 	//Saving Memories
-	//Maybe should write them as another method to make code cleaner
 	if err := s.repo.Update(fromAcc); err != nil {
 		return err
 	}

@@ -95,9 +95,30 @@ func RunTestMode_2() {
 
 	// Запускаем фоновый воркер
 	// Он будет работать в отдельной горутине
-	service.StartInterestWorker(repo, 10*time.Second)
+	//service.StartInterestWorker(repo, 10*time.Second)
 
 	// Дальше твоя обычная логика меню или переводов...
 	fmt.Println("Bank is running. Wait 10s to see interest accrual.")
 	select {} // Чтобы main не закрылся сразу
+}
+
+func RunTestMode_3() {
+	repo := repository.NewInMemRepo()
+
+	// 1. Создаем аккаунты (обычный и накопительный)
+	repo.Create(&domain.Account{ID: "1", Owner: "Aibar", Balance: 1000})
+	repo.Create(&domain.SavingAccount{
+		Account:      &domain.Account{ID: "2", Owner: "Investor", Balance: 5000},
+		InterestRate: 0.01, // 1% за каждый тик
+	})
+
+	// 2. Инициализируем и запускаем воркер (каждые 10 секунд для теста)
+	worker := service.NewInterestWorker(repo, 10*time.Second)
+	worker.Start()
+
+	// 3. Твоя логика (меню или просто ожидание)
+	fmt.Println("Bank is running. Press Enter to exit...")
+	fmt.Scanln() // Ждем нажатия Enter, чтобы приложение не закрылось
+
+	worker.Stop() // Мягко останавливаем воркер перед выходом
 }
