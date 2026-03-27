@@ -6,6 +6,8 @@ type SavingAccount struct {
 	*Account
 	InterestRate float32
 	LastAccrual  time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func (s *SavingAccount) AccrueInterest() float32 {

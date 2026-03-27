@@ -13,55 +13,68 @@ func NewBankingService(r domain.AccountRepository) *BankingService {
 	return &BankingService{repo: r}
 }
 
-func (s *BankingService) Transfer(fromID, toID string, amount float32) error {
-
-	//Validation to check if the user are trying to transfer to itself
+func (r *BankingService) Transfer(fromID, toID string, amount float32) error {
 	if fromID == toID {
-		return errors.New("Can't Transfer to urself!")
+		return errors.New("can't transfer to self")
+	}
+	if amount <= 0 {
+		return errors.New("amount must be greater than zero")
 	}
 
-	//Getting Account Block
-	//For now Getting from map
-	//In future from DB but it will not change the logic here!
-	fromAcc, err := s.repo.GetByID(fromID)
+	txRepo, err := r.repo.BeginTx()
 	if err != nil {
 		return err
 	}
 
-	toAcc, err := s.repo.GetByID(toID)
+	committed := false
+	defer func() {
+		if !committed {
+			_ = txRepo.RollbackTx()
+		}
+	}()
+
+	fromAcc, err := txRepo.GetByID(fromID)
 	if err != nil {
 		return err
 	}
 
-	//Transaction level
-	//
+	toAcc, err := txRepo.GetByID(toID)
+	if err != nil {
+		return err
+	}
+
 	if fromAcc.ID < toAcc.ID {
 		fromAcc.Mu.Lock()
 		toAcc.Mu.Lock()
+		defer toAcc.Mu.Unlock()
+		defer fromAcc.Mu.Unlock()
 	} else {
 		toAcc.Mu.Lock()
 		fromAcc.Mu.Lock()
+		defer fromAcc.Mu.Unlock()
+		defer toAcc.Mu.Unlock()
 	}
-
-	defer fromAcc.Mu.Unlock()
-	defer toAcc.Mu.Unlock()
 
 	if err := fromAcc.Withdraw(amount); err != nil {
 		return err
 	}
 
 	if err := toAcc.Deposit(amount); err != nil {
-		fromAcc.Deposit(amount) //rollback if something went wrong
 		return err
 	}
 
-	//Saving Memories
-	if err := s.repo.Update(fromAcc); err != nil {
+	if err := txRepo.Update(fromAcc); err != nil {
 		return err
 	}
-	if err := s.repo.Update(toAcc); err != nil {
+
+	if err := txRepo.Update(toAcc); err != nil {
 		return err
 	}
+
+	if err := txRepo.CommitTx(); err != nil {
+		return err
+	}
+	committed = true
 
 	return nil
 }

@@ -50,7 +50,6 @@ func (w *InterestWorker) process() {
 
 	fmt.Printf("[InterestWorker] Checking %d savings accounts...\n", len(accounts))
 	for _, acc := range accounts {
-		// Блокируем аккаунт перед начислением, чтобы никто не переводил деньги в этот момент
 		acc.Mu.Lock()
 		interest := acc.AccrueInterest()
 		acc.Mu.Unlock()

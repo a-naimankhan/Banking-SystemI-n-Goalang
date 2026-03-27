@@ -3,20 +3,28 @@ package domain
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 // THE main things about Account
 type Account struct {
-	Mu      sync.Mutex
-	ID      string
-	Owner   string
-	Balance float32
+	Mu        sync.Mutex
+	ID        string
+	Owner     string
+	Balance   float32
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type AccountRepository interface {
 	GetByID(id string) (*Account, error)
 	Update(anyAccount interface{}) error
 	Create(anyAccount interface{}) error
+
+	// Transactional operations
+	BeginTx() (AccountRepository, error)
+	CommitTx() error
+	RollbackTx() error
 }
 
 func (a *Account) Deposit(amount float32) error {
