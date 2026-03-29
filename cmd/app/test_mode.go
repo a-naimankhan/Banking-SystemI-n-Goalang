@@ -137,7 +137,8 @@ func RunTestMode_4() {
 	fmt.Println("--- Starting High Concurrency Postgres Test (Mode 4) ---")
 
 	// 1. Настройка БД (Хардкод как в твоем примере, либо тяни из .env)
-	dsn := "host=localhost user=postgres password=superpasswordforsql dbname=banking port=5432 sslmode=disable"
+	dsn := "host=localhost user=postgres password=Postgres123 dbname=banking port=5432 sslmode=disable"
+	//if you want to test u have change here as well
 	db, err := gorm.Open(pgdriver.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

@@ -14,7 +14,7 @@ import (
 func setupTestDB(t *testing.T) *gorm.DB {
 
 	dsn := "host=localhost user=postgres password=Postgres123 dbname=banking port=5432 sslmode=disable"
-
+	//if you want to test u have to change here as well
 	db, err := gorm.Open(pgdriver.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("Failed to connect to test database: %v", err)

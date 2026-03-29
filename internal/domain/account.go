@@ -8,8 +8,8 @@ import (
 
 // THE main things about Account
 type Account struct {
-	Mu        sync.Mutex
-	ID        string
+	Mu        sync.Mutex `gorm:"-"`
+	ID        string     `gorm:"primary_key"`
 	Owner     string
 	Balance   float32
 	CreatedAt time.Time
